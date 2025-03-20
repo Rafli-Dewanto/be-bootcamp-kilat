@@ -44,7 +44,7 @@ class NoteRepository {
         ...(filters?.endDate && { createdAt: { lte: filters.endDate } }),
       };
 
-      const [] = await Promise.all([
+      const [notes, total] = await Promise.all([
         this.prisma.note.findMany({
           where,
           skip,
@@ -53,9 +53,82 @@ class NoteRepository {
             createdAt: "desc",
           },
         }),
-        
+        this.prisma.note.count({ where }),
       ]);
-    } catch (error) {}
+
+      return {
+        notes: notes.map((note) => Note.fromEntity(note)),
+        total,
+      };
+    } catch (error) {
+      return getErrorMessage(error);
+    }
+  }
+
+  async findById(id: number, userId: number): Promise<Note | null | string> {
+    try {
+      const note = await this.prisma.note.findFirst({
+        where: {
+          id,
+          userId,
+          isDeleted: false,
+        } as Prisma.NoteWhereInput,
+      });
+      return note ? Note.fromEntity(note) : null;
+    } catch (error) {
+      return getErrorMessage(error);
+    }
+  }
+
+  async create(noteData: CreateNoteDto): Promise<Note | string> {
+    try {
+      const note = await this.prisma.note.create({
+        data: {
+          title: noteData.title,
+          content: noteData.content,
+          user: {
+            connect: {
+              email: noteData.email,
+            },
+          },
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        } as Prisma.NoteCreateInput,
+      });
+      return Note.fromEntity(note);
+    } catch (error) {
+      return getErrorMessage(error);
+    }
+  }
+
+  async update(id: number, noteData: UpdateNoteDto): Promise<Note | string> {
+    try {
+      const note = await this.prisma.note.update({
+        where: { id } as Prisma.NoteWhereUniqueInput,
+        data: {
+          ...noteData,
+          updatedAt: new Date(),
+        },
+      });
+      return Note.fromEntity(note);
+    } catch (error) {
+      return getErrorMessage(error);
+    }
+  }
+
+  async softDelete(id: number): Promise<Note | string> {
+    try {
+      const note = await this.prisma.note.update({
+        where: { id } as Prisma.NoteWhereUniqueInput,
+        data: {
+          isDeleted: true,
+          updatedAt: new Date(),
+        } as Prisma.NoteUpdateInput,
+      });
+      return Note.fromEntity(note);
+    } catch (error) {
+      return getErrorMessage(error);
+    }
   }
 }
 

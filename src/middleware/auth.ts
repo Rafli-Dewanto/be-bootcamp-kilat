@@ -36,6 +36,8 @@ export const authorize = (
       id: number;
       email: string;
     };
+    req.user = decoded
+    next()
   } catch (error) {
     return res.status(401).json({ success: false, message: "Unauthorized" });
   }

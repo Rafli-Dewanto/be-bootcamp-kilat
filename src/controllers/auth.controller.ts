@@ -31,7 +31,9 @@ export default class AuthController {
         name,
         password,
       });
+
       if (error) {
+        console.error("Error signUp", getErrorMessage(error));
         return res.status(500).json({
           success: false,
           message: error,
@@ -45,6 +47,7 @@ export default class AuthController {
         data: token,
       });
     } catch (error) {
+      console.error("auth.controller.ts - signUp: ", getErrorMessage(error))
       return res.status(500).json({
         success: false,
         message: getErrorMessage(error),

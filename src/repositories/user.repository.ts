@@ -1,6 +1,7 @@
 import { PrismaClient } from "@prisma/client";
 import { PrismaClientKnownRequestError } from "@prisma/client/runtime/library";
 import { SignUpDTO } from "../types/user";
+import { getErrorMessage } from "../utils/error";
 
 export default class UserRepository {
   private prisma: PrismaClient;
@@ -20,6 +21,7 @@ export default class UserRepository {
           throw new Error("Email already exists");
         }
       }
+      console.error(error instanceof Error ? error.message : getErrorMessage(error))
       throw new Error("Error creating user");
     }
   }
